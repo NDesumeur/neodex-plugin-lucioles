@@ -1,0 +1,9 @@
+{
+  "pluginId": "neodex.lucioles",
+  "repo": "NDesumeur/neodex-plugin-lucioles",
+  "version": "1.0.0",
+  "sha256": "d7de8cb9714b0bb7d14c518ce4f7b0a19cf8e2fe7983a49e84a72ae8ff8925e0",
+  "approvedAt": "2026-11-07T17:30:59.704Z",
+  "neobase": ">=4.0.0",
+  "signature": "05KB4dz9otutyMjIi13o1DrgQgwMN5vjWKE65W6Tx8n9hRays2+zu7J4MrLRH1aGbxdfAu59muAWHr5QbSutDA=="
+}

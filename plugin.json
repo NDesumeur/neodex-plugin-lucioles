@@ -1,0 +1,22 @@
+{
+  "id": "neodex.lucioles",
+  "name": "Lucioles",
+  "version": "1.0.0",
+  "author": "NDesumeur",
+  "description": "Un pré la nuit : toucher une luciole l'allume ou l'éteint, elle et ses quatre voisines. Allume-les toutes.",
+  "icon": "icon.png",
+  "entry": "index.js",
+  "view": "lucioles",
+  "neobase": ">=4.0.0",
+  "type": "app",
+  "category": "Jeux",
+  "syncMode": "progression",
+  "syncInfo": "Pré atteint, étoiles.",
+  "mobile": false,
+  "system": false,
+  "dependencies": {},
+  "sdk": "2.1.0",
+  "permissions": [
+    "storage"
+  ]
+}

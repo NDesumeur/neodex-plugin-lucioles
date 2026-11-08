@@ -1,7 +1,7 @@
 {
   "id": "neodex.lucioles",
   "name": "Lucioles",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "NDesumeur",
   "description": "Casse-tête de lumières : dans un pré de 5 × 5 lucioles, toucher une luciole l'allume ou l'éteint, elle et ses quatre voisines. Allume-les toutes en le moins de coups possible. Des prés toujours faisables, de 3 à 12 coups, qui s'ouvrent l'un après l'autre, et trois étoiles si tu fais aussi bien que le jeu.",
   "icon": "icon.png",

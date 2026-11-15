@@ -2,10 +2,10 @@
 // Jeu NeoDex en pixel art dessiné à la main (police bitmap, cadres et boutons en pixels). Il tourne dans le bac à sable de NeoDex.
 const HTML = `<div class="appWrap wide">
   <div class="agHead"><span class="label">Lucioles</span><span class="hint">Clic sur une luciole</span></div>
-  <div class="gMain"><div class="gameBox"><canvas id="gc" width="288" height="216"></canvas></div>
+  <div class="gMain"><div class="gameBox"><canvas id="gc" width="288" height="216" role="img" aria-label="Pré des lucioles"></canvas></div>
     <div class="gSide">
       <div class="sysCard"><b>RECORDS</b><div class="gStats" id="gStats"></div></div>
-      <div class="row"><button class="btn main" id="gNew">NOUVELLE PARTIE</button><button class="btn" id="luPrev">◀</button><button class="btn" id="luNext">▶</button></div>
+      <div class="row"><button class="btn main" id="gNew">NOUVELLE PARTIE</button><button class="btn" id="luPrev">◀</button><button class="btn" id="luNext">▶</button><button class="btn" id="gFs">PLEIN ÉCRAN</button></div>
       
       <div class="hint">Chaque touche inverse la luciole et celles juste au-dessus, au-dessous, à gauche et à droite.</div><div class="hint">Trois étoiles si tu finis en autant de coups que le jeu (ou moins).</div>
     </div></div>
@@ -17,7 +17,9 @@ const CSS = `.gMain{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap}
 .gSide .sysCard{display:flex;flex-direction:column}
 .gStats{display:grid;grid-template-columns:1fr auto;gap:4px 14px}
 .gStats b{text-align:right}
-.gameBox canvas{max-width:640px;aspect-ratio:288/216}`;
+.gameBox canvas{width:min(100%,max(300px,calc((100vh - 190px) * 288 / 216)));height:auto;aspect-ratio:288/216}
+.gameBox:fullscreen{padding:0}
+.gameBox:fullscreen canvas{width:min(100vw,calc(100vh * 288 / 216))}`;
 /* ---------- l'habillage pixel art, dessiné à la main : police bitmap (accents compris), cadres, boutons, icônes ----------
    Tout est en pixels pleins, agrandis par 2 sans lissage : aucun dégradé, aucune ombre floue. */
 const PXK = (() => {
@@ -329,11 +331,15 @@ const beep = (f, d = .1, type = 'square', slide = 0, vol = .08) => { try { actx 
 const keyOk = e => view.classList.contains('on') && !/INPUT|SELECT|TEXTAREA/.test(e.target.tagName);
 const showStats = rows => $('gStats').replaceChildren(...rows.flatMap(([a, b]) => [el('span', '', a), el('b', '', String(b))]));
 /* ---------- Lucioles : un pré la nuit ; toucher une luciole l'allume ou l'éteint, elle et ses quatre voisines. Il faut toutes les allumer. ---------- */
-const LU = {N: 5, C: 30, X: 69, Y: 34};
-const LU_PAL = {k: '#05010b', w: '#e8f0ff', W: '#a8b8e0', b: '#3a2a20', y: '#fff4a0', Y: '#ffd84a', g: '#c8ff7a', d: '#4a5a3a'};
-const LU_ON = [spr(['..w...w...', '.wWw.wWw..', '..wW.Ww...', '...kbk....', '..kbbbk...', '..kbbbk...', '..kyyyk...', '.kyYYYyk..', '.kygggyk..', '..kyyyk...', '...kkk....'], LU_PAL),
-  spr(['.w.....w..', 'wWw...wWw.', '.wWw.wWw..', '...kbk....', '..kbbbk...', '..kbbbk...', '..kyyyk...', '.kyYYYyk..', '.kygggyk..', '..kyyyk...', '...kkk....'], LU_PAL)];
-const LU_OFF = spr(['..........', '..........', '...k.k....', '...kbk....', '..kbbbk...', '..kbbbk...', '..kdddk...', '.kdddddk..', '.kdddddk..', '..kdddk...', '...kkk....'], LU_PAL);
+const LU = {N: 5, C: 36, X: 54, Y: 30};
+// des lucioles plus grandes, de profil (un œil) : l'abdomen qui brille à gauche, la tête à droite, les ailes qui battent en trois temps
+const LU_BODY = ['...kkkkkkkk....', '..kYYYkbbbbkk..', '.kYyyYkbbbbbek.', '.kYyyYkbbbbbbk.', '..kYYYkbbbbkk..', '...kkkkk.k.k...'];
+const LU_WINGS = [['.....w...w.....', '....wWw.wWw....', '....wWWwWWw....', '.....wWWWw.....', '......wWw......', '.......k.......'],
+  ['...............', '...............', '..wwww...wwww..', '.wWWWWw.wWWWWw.', '..wwwwWkWwwww..', '.......k.......'],
+  ['...............', '...............', '...............', '...wwww.wwww...', '..wWWWWkWWWWw..', '...wwwwkwwww...']];
+const LU_PAL = {k: '#05010b', w: '#e8f0ff', W: '#a8b8e0', b: '#3a2a20', e: '#e8f0ff', Y: '#ffd84a', y: '#fff4a0'};
+const LU_ON = LU_WINGS.map(wg => spr([...wg, ...LU_BODY], LU_PAL));
+const LU_OFF = spr(['...............', '...............', '...............', '...............', '...............', '....wwwwwww....', ...LU_BODY], {...LU_PAL, w: '#4a5468', Y: '#3a4a2e', y: '#4a5a3a', e: '#8a94a8'});  // posée, ailes repliées, éteinte
 const lus = gstore('lucioles', {level: 1, top: 1, stars: 0, games: 0});
 const luToggle = (b, x, y) => { for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) { const a = x + dx, c = y + dy; if (a >= 0 && c >= 0 && a < LU.N && c < LU.N) b[c][a] = !b[c][a]; } };
 let lu = null;
@@ -343,7 +349,7 @@ function luNew(level = lus.level) {
   while (presses.size < Math.min(12, 2 + level)) presses.add(Math.floor(r() * 25));  // partir du pré tout allumé et toucher quelques lucioles : toujours faisable
   for (const p of presses) luToggle(b, p % 5, Math.floor(p / 5));
   if (b.every(r => r.every(v => v))) luToggle(b, 2, 2);
-  lu = Object.assign(lu || {tick: 0, raf: 0}, {mode: 'play', b, par: presses.size, moves: 0, wonAt: 0, hover: null, sparks: []});
+  lu = Object.assign(lu || {tick: 0, raf: 0}, {mode: 'play', b, par: presses.size, presses: [...presses], moves: 0, wonAt: 0, hover: null, sparks: [], lift: b.map(r => r.map(v => v ? 1 : 0))});
   luInfo();
 }
 function luPress(x, y) {
@@ -362,15 +368,18 @@ const LU_BG = cnv(W, H, b => {  // le ciel, la lune, les herbes hautes
   for (let x = 0; x < W; x += 2) { const h = 6 + Math.floor(r() * 14); px(b, '#1a3a24', x, H - h, 1, h); px(b, '#2a5a34', x + 1, H - h + 3, 1, h - 3); }
   for (let x = 0; x < W; x += 3) { const h = 3 + Math.floor(r() * 10); px(b, '#12301c', x, 190 - h, 1, h); }
   px(b, '#05010b', LU.X - 5, LU.Y - 5, LU.N * LU.C + 10, LU.N * LU.C + 10); px(b, '#162a20', LU.X - 4, LU.Y - 4, LU.N * LU.C + 8, LU.N * LU.C + 8);
-  for (let y = 0; y < LU.N; y++) for (let x = 0; x < LU.N; x++) { const cx = LU.X + x * LU.C, cy = LU.Y + y * LU.C; px(b, (x + y) % 2 ? '#1c3828' : '#1a3424', cx, cy, LU.C, LU.C); for (let k = 0; k < 5; k++) px(b, '#24482e', cx + 3 + k * 6, cy + LU.C - 3 - (k % 3), 1, 2 + (k % 3)); }
+  for (let y = 0; y < LU.N; y++) for (let x = 0; x < LU.N; x++) { const cx = LU.X + x * LU.C, cy = LU.Y + y * LU.C; px(b, (x + y) % 2 ? '#1c3828' : '#1a3424', cx, cy, LU.C, LU.C); for (let k = 0; k < 6; k++) px(b, '#24482e', cx + 3 + k * 6, cy + LU.C - 3 - (k % 3), 1, 2 + (k % 3));
+    px(b, '#2e5a34', cx + 17, cy + 26, 1, 9); px(b, '#3a6a3e', cx + 16, cy + 26, 3, 1); }  // la tige où la luciole se pose
 });
 function luDraw() {
   g.drawImage(LU_BG, 0, 0);
   const won = lu.mode === 'won' ? lu.tick - lu.wonAt : 0;
   for (let y = 0; y < LU.N; y++) for (let x = 0; x < LU.N; x++) {
-    const on = lu.b[y][x], cx = LU.X + x * LU.C + 10, cy = LU.Y + y * LU.C + 9, bob = on ? Math.round(Math.sin(lu.tick / 14 + x * 1.7 + y) * 1.5) : 0;
-    if (on) { const R = 10 + Math.round(Math.sin(lu.tick / 9 + x + y * 2)); for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) { const d = Math.hypot(dx, dy); if (d <= R && (dx + dy + lu.tick) % 2 === 0 && (d < R * .55 || (dx * 3 + dy) % 4 === 0)) px(g, d < R * .55 ? '#3a5a2a' : '#2a4a26', cx + 4 + dx, cy + 8 + bob + dy); } }  // le halo, tramé
-    g.drawImage(on ? LU_ON[Math.floor(lu.tick / 6 + x + y) % 2] : LU_OFF, cx, cy + bob);
+    const on = lu.b[y][x], l = lu.lift[y][x] += ((on ? 1 : 0) - lu.lift[y][x]) * .12, ph = x * 1.7 + y * 2.3;  // l : 0 posée sur sa tige, 1 en vol (elle décolle ou se repose en douceur)
+    const cx = Math.round(LU.X + x * LU.C + 10 + Math.sin(lu.tick / 23 + ph) * 3 * l), cy = Math.round(LU.Y + y * LU.C + 14 - l * 7 + Math.sin(lu.tick / 11 + ph) * 2 * l);  // elle volette en petites boucles
+    if (l > .5) { const R = Math.round((10 + Math.sin(lu.tick / 9 + x + y * 2)) * l); for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) { const d = Math.hypot(dx, dy); if (d <= R && (dx + dy + lu.tick) % 2 === 0 && (d < R * .55 || (dx * 3 + dy) % 4 === 0)) px(g, d < R * .55 ? '#3a5a2a' : '#2a4a26', cx + 4 + dx, cy + 8 + dy); } }  // le halo, tramé, autour de l'abdomen
+    g.drawImage(l > .5 ? LU_ON[[0, 1, 2, 1][Math.floor(lu.tick / 3 + x * 2 + y) % 4]] : LU_OFF, cx, cy);
+    if (l > .5 && (lu.tick + x * 7 + y * 3) % 40 < 3) px(g, '#ffffff', cx + 3, cy + 8, 1, 1);  // l'abdomen scintille
     if (lu.hover && lu.mode === 'play' && Math.abs(lu.hover[0] - x) + Math.abs(lu.hover[1] - y) <= 1) { px(g, '#ffd84a', LU.X + x * LU.C, LU.Y + y * LU.C, LU.C, 1); px(g, '#ffd84a', LU.X + x * LU.C, LU.Y + y * LU.C + LU.C - 1, LU.C, 1); }
   }
   pxFont(g, 'PRÉ ' + lus.level, 8, 16, '#c8ff7a', 8); pxFont(g, lu.moves + ' / ' + lu.par + ' coups', W - 8, 16, '#a8b8e0', 6, 'right');
@@ -383,10 +392,13 @@ function luInfo() { showStats([['Pré le plus loin', lus.top], ['Étoiles', lus.
 $('luPrev').onclick = () => { if (lus.level > 1) luNew(lus.level - 1); $('luPrev').blur(); };
 $('luNext').onclick = () => { if (lus.level < lus.top) luNew(lus.level + 1); $('luNext').blur(); };
 $('gNew').onclick = () => { luNew(lus.level); $('gNew').blur(); };
-{  // vérification : chaque pré se résout en rejouant les mêmes touches (une touche jouée deux fois s'annule)
+$('gFs').onclick = () => { const box = cv.parentElement; document.fullscreenElement ? document.exitFullscreen() : box.requestFullscreen?.().catch(() => {}); $('gFs').blur(); };
+function luCheck() {  // vérification : chaque pré se résout en rejouant les mêmes touches (une touche jouée deux fois s'annule) ; les lucioles tiennent dans leur case et dans le pré
   let ok = true; for (let lv = 1; lv < 30; lv++) { const b = [...Array(5)].map(() => Array(5).fill(true)), r = seeded(lv * 7919), p = new Set(); while (p.size < Math.min(12, 2 + lv)) p.add(Math.floor(r() * 25)); for (const q of p) luToggle(b, q % 5, Math.floor(q / 5)); for (const q of p) luToggle(b, q % 5, Math.floor(q / 5)); ok &&= b.every(r => r.every(v => v)); }
-  console.assert(ok, 'lucioles');
+  const fit = LU.X + LU.N * LU.C <= W && LU.Y + LU.N * LU.C <= H && LU_ON.every(c => c.width + 10 + 3 <= LU.C + 4 && c.height <= LU.C) && LU_OFF.width === LU_ON[0].width;
+  return [ok ? '' : 'prés', fit ? '' : 'taille'].filter(Boolean).join(' | ') || 'ok';
 }
+{ const c = luCheck(); console.assert(c === 'ok', 'lucioles', c); cv.__lu = {check: luCheck, st: () => lu, press: (x, y) => luPress(x, y), again: lv => luNew(lv), lus}; }
 ctx.onOpen(() => { if (!lu) luNew(); gameLoop(lu, 'lucioles', () => {}, luDraw); luInfo(); });
 
 }

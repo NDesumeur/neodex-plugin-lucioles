@@ -12,6 +12,9 @@ A lights puzzle in a meadow at night: touching a firefly turns it on or off, alo
 
 Tip: the order of the touches does not matter, and touching the same firefly twice is the same as doing nothing.
 
+- **Full screen**: the button of the same name; Escape to leave it. Otherwise the meadow takes all the room the window leaves.
+- An unlit firefly rests on its stem, wings folded; lit, it **takes off**, beats its wings and flutters about in small loops, its abdomen glowing.
+
 ## The meadows
 
 - Each meadow is made by starting from a fully lit meadow and touching a few fireflies: so it is **always solvable**, and the game knows how many moves it took.

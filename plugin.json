@@ -1,9 +1,9 @@
 {
   "id": "neodex.lucioles",
   "name": "Lucioles",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "author": "NDesumeur",
-  "description": "Casse-tête de lumières : dans un pré de 5 × 5 lucioles, toucher une luciole l'allume ou l'éteint, elle et ses quatre voisines. Allume-les toutes en le moins de coups possible. Des prés toujours faisables, de 3 à 12 coups, qui s'ouvrent l'un après l'autre, et trois étoiles si tu fais aussi bien que le jeu.",
+  "description": "Casse-tête de lumières : dans un pré de 5 × 5 lucioles, toucher une luciole l'allume ou l'éteint, elle et ses quatre voisines. Allume-les toutes en le moins de coups possible. Des prés toujours faisables, de 3 à 12 coups, qui s'ouvrent l'un après l'autre, et trois étoiles si tu fais aussi bien que le jeu. Grandes lucioles qui décollent de leur tige quand elles s'allument et volettent en battant des ailes ; jeu à la taille de l'écran et plein écran.",
   "icon": "icon.png",
   "entry": "index.js",
   "view": "lucioles",

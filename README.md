@@ -12,6 +12,9 @@ Un casse-tête de lumières dans un pré la nuit : toucher une luciole l'allume 
 
 Astuce : l'ordre des touches ne compte pas, et toucher deux fois la même luciole revient à ne rien faire.
 
+- **Plein écran** : le bouton du même nom ; Échap pour en sortir. Hors plein écran, le pré prend toute la place que laisse la fenêtre.
+- Une luciole éteinte est posée sur sa tige, ailes repliées ; allumée, elle **décolle**, bat des ailes et volette en petites boucles, l'abdomen brillant.
+
 ## Les prés
 
 - Chaque pré est fabriqué en partant d'un pré tout allumé et en touchant quelques lucioles : il est donc **toujours faisable**, et le jeu connaît le nombre de coups qu'il lui a fallu.

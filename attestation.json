@@ -1,9 +1,9 @@
 {
   "pluginId": "neodex.lucioles",
   "repo": "NDesumeur/neodex-plugin-lucioles",
-  "version": "1.0.1",
-  "sha256": "b121c10bb8474bde1a44bf1f4f6753ad0c5b5f38b0480fa79708ac0c1bf51a20",
-  "approvedAt": "2026-11-08T12:10:48.357Z",
+  "version": "1.1.0",
+  "sha256": "fa918d524ef4bf349f252f76030728dc76ae6505282b4a7460af1ef68ff4ced1",
+  "approvedAt": "2026-11-16T04:14:36.862Z",
   "neobase": ">=4.0.0",
-  "signature": "OcnilujSPBE4/NsKn2F1qkwqWbrIDW1TOvAald7p1iHajK43zX7FAeCTXj3SRDvXb1SWqUVfPl1OmfV8ywIJAQ=="
+  "signature": "IIW4IzFbwxoKbNYly5MPRukwWqEHLJsxHYtfNlWgGL1LtuOPob2l5HsxnpF5zumi6CbCTZh9a8KbabPXCc4IAQ=="
 }

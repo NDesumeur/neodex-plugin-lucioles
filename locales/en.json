@@ -49,7 +49,6 @@
  "Od": "Od",
  "PLEIN ÉCRAN": "FULL SCREEN",
  "PRÉ": "PRE",
- "Pré atteint, étoiles.": "Pre reached, stars.",
  "Pré le plus loin": "Farthest meadow",
  "Prés finis": "Finished meadows",
  "RECORDS": "RECORDS",
@@ -64,5 +63,6 @@
  "étoile": "star",
  "étoiles": "stars",
  "Pré des lucioles": "Firefly meadow",
- "prés": "meadows"
+ "prés": "meadows",
+ "Rien n'est synchronisé : tes records restent sur cet appareil.": "Nothing is synced: your records stay on this device."
 }

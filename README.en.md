@@ -4,6 +4,10 @@ A lights puzzle in a meadow at night: touching a firefly turns it on or off, alo
 
 *Version française : [README.md](README.md)*
 
+## Daily meadow and the solution explained (new in 1.2.0)
+
+**Daily meadow**: one meadow, the same for everyone each day, with a day streak. **The solution explained**: the game is an algebra problem. Touching a firefly twice changes nothing, so all that counts is “touched or not” (0 or 1, with 1 + 1 = 0); each firefly gives one equation, and the game solves these 25 equations by elimination. It explains the calculation (how many truly different equations, how many solutions) and marks the cells of the shortest solution on the meadow.
+
 ## How to play
 
 - The meadow is a 5 × 5 grid of fireflies, some lit, some dark.

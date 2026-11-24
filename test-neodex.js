@@ -14,6 +14,16 @@ module.exports = async ({ pj, sleep }) => {
   const s = await C('return {mode: lu.mode, moves: lu.moves, stars: lu.stars};');
   if (s.mode !== 'won' || s.moves !== ps.length || s.stars !== 3) throw new Error('le pré devait être fini en trois étoiles : ' + JSON.stringify(s));
   await sleep(700); await shot('2-allumees');
+  // le pré du jour : le même à chaque départ ; la solution expliquée marque les cases, et les toucher rallume tout
+  const day = []; for (let k = 0; k < 2; k++) { await pj(`document.getElementById('luDaily').click(), 0`); await sleep(200); day.push(await C('return lu.daily + ":" + JSON.stringify(lu.b);')); }
+  if (day[0] !== day[1] || !day[0].startsWith('true')) throw new Error('pré du jour');
+  await pj(`document.getElementById('luMath').click(), 0`); await sleep(400); await shot('3-solution');
+  const tip = await pj(`document.getElementById('luTip').textContent`); if (!/25 équations/.test(tip)) throw new Error('explication : ' + tip);
+  const press = await pj(`(() => { const m = /les (\\d+) cases/.exec(document.getElementById('luTip').textContent); return m ? +m[1] : -1; })()`);
+  const cells = await C('return T.show();');
+  for (const i of cells) { await click(i % 5, Math.floor(i / 5)); await sleep(60); }
+  if (await C('return lu.mode;') !== 'won' || cells.length !== press) throw new Error('la solution expliquée devait rallumer le pré : ' + cells.length + ' / ' + press);
+  await sleep(300);
   const errs = await pj(`window.__e.join(' | ')`); if (errs) throw new Error('erreur : ' + errs);
   await pj(`document.fullscreenElement && document.exitFullscreen(), 0`); await sleep(200);
   await pj(`document.getElementById('gFs').click(), 0`); await sleep(800);

@@ -4,6 +4,10 @@ Un casse-tête de lumières dans un pré la nuit : toucher une luciole l'allume 
 
 *English version: [README.en.md](README.en.md)*
 
+## Pré du jour et solution expliquée (nouveau en 1.2.0)
+
+**Pré du jour** : un pré le même pour tout le monde chaque jour, avec une série de jours. **La solution expliquée** : le jeu est un problème d’algèbre. Toucher deux fois une luciole ne change rien, donc seul compte « touchée ou pas » (0 ou 1, avec 1 + 1 = 0) ; chaque luciole donne une équation, et le jeu résout ces 25 équations par élimination. Il explique le calcul (combien d’équations vraiment différentes, combien de solutions) et marque sur le pré les cases de la solution la plus courte.
+
 ## Comment jouer
 
 - Le pré est une grille de 5 × 5 lucioles, certaines allumées, d'autres éteintes.

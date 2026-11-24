@@ -7,10 +7,14 @@ const HTML = `<div class="appWrap wide">
       <div class="sysCard"><b>RECORDS</b><div class="gStats" id="gStats"></div></div>
       <div class="row"><button class="btn main" id="gNew">NOUVELLE PARTIE</button><button class="btn" id="luPrev">◀</button><button class="btn" id="luNext">▶</button><button class="btn" id="gFs">PLEIN ÉCRAN</button></div>
       
+      <div class="row"><button class="btn" id="luDaily">PRÉ DU JOUR</button><button class="btn" id="luMath">LA SOLUTION EXPLIQUÉE</button></div>
+      <div class="hint luTip" id="luTip"></div>
       <div class="hint">Chaque touche inverse la luciole et celles juste au-dessus, au-dessous, à gauche et à droite.</div><div class="hint">Trois étoiles si tu finis en autant de coups que le jeu (ou moins).</div>
     </div></div>
 </div>`;
-const CSS = `.gMain{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap}
+const CSS = `.luTip{background:#0e1a24;color:#e8f0ff;border-left:4px solid #c8ff7a;padding:6px 10px}
+.luTip:empty{display:none}
+.gMain{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap}
 .gameBox{display:grid;place-items:center;padding:10px;background:#05010b;flex:2;min-width:320px;position:relative}
 .gameBox canvas{width:100%;image-rendering:pixelated;cursor:var(--cp,pointer);touch-action:none}
 .gSide{display:flex;flex-direction:column;gap:14px;flex:1;min-width:250px;max-width:420px}
@@ -340,23 +344,42 @@ const LU_WINGS = [['.....w...w.....', '....wWw.wWw....', '....wWWwWWw....', '...
 const LU_PAL = {k: '#05010b', w: '#e8f0ff', W: '#a8b8e0', b: '#3a2a20', e: '#e8f0ff', Y: '#ffd84a', y: '#fff4a0'};
 const LU_ON = LU_WINGS.map(wg => spr([...wg, ...LU_BODY], LU_PAL));
 const LU_OFF = spr(['...............', '...............', '...............', '...............', '...............', '....wwwwwww....', ...LU_BODY], {...LU_PAL, w: '#4a5468', Y: '#3a4a2e', y: '#4a5a3a', e: '#8a94a8'});  // posée, ailes repliées, éteinte
-const lus = gstore('lucioles', {level: 1, top: 1, stars: 0, games: 0});
+const lus = gstore('lucioles', {level: 1, top: 1, stars: 0, games: 0}); lus.daily ??= {last: '', streak: 0, best: 0};
+const luDay = (k = 0) => { const d = new Date(Date.now() - k * 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+// la solution par l'algèbre : toucher deux fois une case l'annule, donc seul compte « touchée ou pas » (0 ou 1, calcul modulo 2).
+// Chaque luciole donne une équation : la somme des touches sur elle et ses voisines doit valoir 1 si elle est éteinte, 0 sinon.
+// On résout ce système par élimination (comme au collège, avec 1 + 1 = 0), puis on garde la solution qui demande le moins de touches.
+function luSolve(b) {
+  const N = b.length, M = N * N, rows = [];
+  for (let i = 0; i < M; i++) { const x = i % N, y = Math.floor(i / N), r = Array(M + 1).fill(0); for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) { const a = x + dx, c = y + dy; if (a >= 0 && c >= 0 && a < N && c < N) r[c * N + a] = 1; } r[M] = b[y][x] ? 0 : 1; rows.push(r); }
+  const piv = []; let rk = 0;
+  for (let col = 0; col < M && rk < M; col++) { const p = rows.findIndex((r, k) => k >= rk && r[col]); if (p < 0) continue; [rows[rk], rows[p]] = [rows[p], rows[rk]];
+    for (let k = 0; k < M; k++) if (k !== rk && rows[k][col]) for (let j = col; j <= M; j++) rows[k][j] ^= rows[rk][j]; piv.push(col); rk++; }
+  if (rows.slice(rk).some(r => r[M])) return null;  // pas de solution (n'arrive pas : les prés partent d'un pré allumé)
+  const free = [...Array(M).keys()].filter(c => !piv.includes(c)); let best = null;
+  for (let m = 0; m < 1 << free.length; m++) { const s = Array(M).fill(0); free.forEach((c, k) => s[c] = m >> k & 1);
+    piv.forEach((c, k) => { let v = rows[k][M]; for (const f of free) if (rows[k][f]) v ^= s[f]; s[c] = v; });
+    if (!best || s.filter(Boolean).length < best.filter(Boolean).length) best = s; }
+  return {press: best, eq: M, rank: rk, free: free.length};
+}
 const luToggle = (b, x, y) => { for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) { const a = x + dx, c = y + dy; if (a >= 0 && c >= 0 && a < LU.N && c < LU.N) b[c][a] = !b[c][a]; } };
 let lu = null;
-function luNew(level = lus.level) {
-  lus.level = level; saveGames();
-  const b = [...Array(LU.N)].map(() => Array(LU.N).fill(true)), r = seeded(level * 7919), presses = new Set();
-  while (presses.size < Math.min(12, 2 + level)) presses.add(Math.floor(r() * 25));  // partir du pré tout allumé et toucher quelques lucioles : toujours faisable
+function luNew(level = lus.level, daily = false) {
+  if (!daily) { lus.level = level; saveGames(); } $('luTip').textContent = ''; luShow = null;
+  const b = [...Array(LU.N)].map(() => Array(LU.N).fill(true)), r = seeded(daily ? +luDay().replace(/-/g, '') : level * 7919), presses = new Set();
+  while (presses.size < (daily ? 9 : Math.min(12, 2 + level))) presses.add(Math.floor(r() * 25));  // partir du pré tout allumé et toucher quelques lucioles : toujours faisable
   for (const p of presses) luToggle(b, p % 5, Math.floor(p / 5));
   if (b.every(r => r.every(v => v))) luToggle(b, 2, 2);
-  lu = Object.assign(lu || {tick: 0, raf: 0}, {mode: 'play', b, par: presses.size, presses: [...presses], moves: 0, wonAt: 0, hover: null, sparks: [], lift: b.map(r => r.map(v => v ? 1 : 0))});
+  lu = Object.assign(lu || {tick: 0, raf: 0}, {mode: 'play', b, par: presses.size, presses: [...presses], moves: 0, wonAt: 0, hover: null, sparks: [], lift: b.map(r => r.map(v => v ? 1 : 0)), daily});
   luInfo();
 }
+let luShow = null;  // les cases de la solution expliquée, montrées sur le pré
 function luPress(x, y) {
-  if (lu.mode !== 'play') return; luToggle(lu.b, x, y); lu.moves++; beep(lu.b[y][x] ? 880 : 440, .08, 'triangle', lu.b[y][x] ? 1320 : 330, .06);
+  if (lu.mode !== 'play') return; if (luShow) { luShow = null; $('luTip').textContent = ''; } luToggle(lu.b, x, y); lu.moves++; beep(lu.b[y][x] ? 880 : 440, .08, 'triangle', lu.b[y][x] ? 1320 : 330, .06);
   if (lu.b.every(r => r.every(v => v))) {
     lu.mode = 'won'; lu.wonAt = lu.tick; const st = lu.moves <= lu.par ? 3 : lu.moves <= lu.par + 3 ? 2 : 1; lu.stars = st; lus.stars += st; lus.games++;
-    if (lus.level >= lus.top) lus.top = lus.level + 1; best('lucioles', lus.level); saveGames(); luInfo();
+    if (lu.daily) { const d = lus.daily; if (d.last !== luDay()) { d.streak = d.last === luDay(1) ? d.streak + 1 : 1; d.best = Math.max(d.best, d.streak); d.last = luDay(); } }
+    else { if (lus.level >= lus.top) lus.top = lus.level + 1; best('lucioles', lus.level); } saveGames(); luInfo();
     [659, 784, 988, 1319].forEach((f, k) => setTimeout(() => beep(f, .18, 'triangle'), k * 100));
   }
 }
@@ -382,13 +405,21 @@ function luDraw() {
     if (l > .5 && (lu.tick + x * 7 + y * 3) % 40 < 3) px(g, '#ffffff', cx + 3, cy + 8, 1, 1);  // l'abdomen scintille
     if (lu.hover && lu.mode === 'play' && Math.abs(lu.hover[0] - x) + Math.abs(lu.hover[1] - y) <= 1) { px(g, '#ffd84a', LU.X + x * LU.C, LU.Y + y * LU.C, LU.C, 1); px(g, '#ffd84a', LU.X + x * LU.C, LU.Y + y * LU.C + LU.C - 1, LU.C, 1); }
   }
-  pxFont(g, 'PRÉ ' + lus.level, 8, 16, '#c8ff7a', 8); pxFont(g, lu.moves + ' / ' + lu.par + ' coups', W - 8, 16, '#a8b8e0', 6, 'right');
-  if (won > 30) gameText(g, W, [['TOUTES ALLUMÉES !', '#c8ff7a', 10], [lu.stars + (lu.stars > 1 ? ' étoiles' : ' étoile') + ' sur 3 · ' + lu.moves + ' coups', '#ffd84a'], ['Clic : pré suivant', '#e8f0ff']], 100);
+  if (luShow && lu.mode === 'play') luShow.forEach((v, i) => { if (!v) return; const X = LU.X + (i % LU.N) * LU.C, Y = LU.Y + Math.floor(i / LU.N) * LU.C, c = (lu.tick >> 3) % 2 ? '#c8ff7a' : '#ffffff';
+    px(g, c, X + 2, Y + 2, 6, 2); px(g, c, X + 2, Y + 2, 2, 6); px(g, c, X + LU.C - 8, Y + 2, 6, 2); px(g, c, X + LU.C - 4, Y + 2, 2, 6); px(g, c, X + 2, Y + LU.C - 4, 6, 2); px(g, c, X + 2, Y + LU.C - 8, 2, 6); px(g, c, X + LU.C - 8, Y + LU.C - 4, 6, 2); px(g, c, X + LU.C - 4, Y + LU.C - 8, 2, 6); });
+  pxFont(g, lu.daily ? 'PRÉ DU JOUR' : 'PRÉ ' + lus.level, 8, 16, '#c8ff7a', 8); pxFont(g, lu.moves + ' / ' + lu.par + ' coups', W - 8, 16, '#a8b8e0', 6, 'right');
+  if (won > 30) gameText(g, W, [['TOUTES ALLUMÉES !', '#c8ff7a', 10], [lu.stars + (lu.stars > 1 ? ' étoiles' : ' étoile') + ' sur 3 · ' + lu.moves + ' coups', '#ffd84a'], [lu.daily ? 'Clic : retour aux prés' : 'Clic : pré suivant', '#e8f0ff']], 100);
 }
 const luCell = (x, y) => { const cx = Math.floor((x - LU.X) / LU.C), cy = Math.floor((y - LU.Y) / LU.C); return cx >= 0 && cy >= 0 && cx < LU.N && cy < LU.N ? [cx, cy] : null; };
 cv.onpointermove = e => { if (lu) lu.hover = luCell(...cpos(e)); };
-cv.onpointerdown = e => { e.preventDefault(); if (!lu) return; if (lu.mode === 'won') { if (lu.tick - lu.wonAt > 30) luNew(lus.level + 1); return; } const c = luCell(...cpos(e)); if (c) luPress(...c); };
-function luInfo() { showStats([['Pré le plus loin', lus.top], ['Étoiles', lus.stars], ['Prés finis', lus.games]]); }
+cv.onpointerdown = e => { e.preventDefault(); if (!lu) return; if (lu.mode === 'won') { if (lu.tick - lu.wonAt > 30) luNew(lu.daily ? lus.level : lus.level + 1); return; } const c = luCell(...cpos(e)); if (c) luPress(...c); };
+function luInfo() { const d = lus.daily; showStats([['Pré le plus loin', lus.top], ['Étoiles', lus.stars], ['Prés finis', lus.games], ['Pré du jour', d.last === luDay() ? 'fait ✓' : 'à faire'], ['Série de jours', (d.last === luDay() || d.last === luDay(1) ? d.streak : 0) + ' (record ' + d.best + ')']]); }
+$('luDaily').onclick = () => { luNew(lus.level, true); $('luDaily').blur(); };
+$('luMath').onclick = () => {
+  $('luMath').blur(); if (!lu || lu.mode !== 'play') return; if (luShow) { luShow = null; $('luTip').textContent = ''; return; }
+  const s = luSolve(lu.b); if (!s) return; luShow = s.press; const n = s.press.filter(Boolean).length;
+  $('luTip').textContent = 'Toucher deux fois une luciole ne change rien : seul compte « touchée ou pas » (0 ou 1, avec 1 + 1 = 0). Chaque luciole donne une équation : ses touches et celles de ses voisines doivent l’inverser si elle est éteinte. Cela fait ' + s.eq + ' équations ; en les combinant (élimination, comme au collège), il en reste ' + s.rank + ' vraiment différentes, donc ' + (1 << s.free) + ' solutions possibles. La plus courte : les ' + n + ' cases marquées, dans n’importe quel ordre.';
+};
 $('luPrev').onclick = () => { if (lus.level > 1) luNew(lus.level - 1); $('luPrev').blur(); };
 $('luNext').onclick = () => { if (lus.level < lus.top) luNew(lus.level + 1); $('luNext').blur(); };
 $('gNew').onclick = () => { luNew(lus.level); $('gNew').blur(); };
@@ -396,9 +427,11 @@ $('gFs').onclick = () => { const box = cv.parentElement; document.fullscreenElem
 function luCheck() {  // vérification : chaque pré se résout en rejouant les mêmes touches (une touche jouée deux fois s'annule) ; les lucioles tiennent dans leur case et dans le pré
   let ok = true; for (let lv = 1; lv < 30; lv++) { const b = [...Array(5)].map(() => Array(5).fill(true)), r = seeded(lv * 7919), p = new Set(); while (p.size < Math.min(12, 2 + lv)) p.add(Math.floor(r() * 25)); for (const q of p) luToggle(b, q % 5, Math.floor(q / 5)); for (const q of p) luToggle(b, q % 5, Math.floor(q / 5)); ok &&= b.every(r => r.every(v => v)); }
   const fit = LU.X + LU.N * LU.C <= W && LU.Y + LU.N * LU.C <= H && LU_ON.every(c => c.width + 10 + 3 <= LU.C + 4 && c.height <= LU.C) && LU_OFF.width === LU_ON[0].width;
-  return [ok ? '' : 'prés', fit ? '' : 'taille'].filter(Boolean).join(' | ') || 'ok';
+  let alg = true; for (let lv = 1; lv < 12; lv++) { const b = [...Array(5)].map(() => Array(5).fill(true)), r = seeded(lv * 7919), p = new Set(); while (p.size < Math.min(12, 2 + lv)) p.add(Math.floor(r() * 25)); for (const q of p) luToggle(b, q % 5, Math.floor(q / 5));
+    const s = luSolve(b); if (!s || s.press.filter(Boolean).length > p.size || s.free !== 2) { alg = false; break; } s.press.forEach((v, i) => { if (v) luToggle(b, i % 5, Math.floor(i / 5)); }); alg &&= b.every(r => r.every(v => v)); }
+  return [ok ? '' : 'prés', fit ? '' : 'taille', alg ? '' : 'algèbre'].filter(Boolean).join(' | ') || 'ok';
 }
-{ const c = luCheck(); console.assert(c === 'ok', 'lucioles', c); cv.__lu = {check: luCheck, st: () => lu, press: (x, y) => luPress(x, y), again: lv => luNew(lv), lus}; }
+{ const c = luCheck(); console.assert(c === 'ok', 'lucioles', c); cv.__lu = {show: () => (luShow || []).flatMap((v, i) => v ? [i] : []), check: luCheck, st: () => lu, press: (x, y) => luPress(x, y), again: lv => luNew(lv), lus}; }
 ctx.onOpen(() => { if (!lu) luNew(); gameLoop(lu, 'lucioles', () => {}, luDraw); luInfo(); });
 
 }

@@ -78,5 +78,17 @@
  "solutions possibles. La plus courte : les": "possible solutions. The shortest: the",
  "cases marquées, dans n’importe quel ordre.": "marked cells, in any order.",
  "algèbre": "algebra",
- "Casse-tête de lumières : dans un pré de 5 × 5 lucioles, toucher une luciole l'allume ou l'éteint, elle et ses quatre voisines. Allume-les toutes en le moins de coups possible. Des prés toujours faisables, de 3 à 12 coups, qui s'ouvrent l'un après l'autre, et trois étoiles si tu fais aussi bien que le jeu. Grandes lucioles qui décollent de leur tige quand elles s'allument et volettent en battant des ailes ; jeu à la taille de l'écran et plein écran. Pré du jour avec série de jours, et la solution expliquée par l’algèbre (25 équations résolues par élimination).": "A lights puzzle: in a meadow of 5 × 5 fireflies, touching a firefly turns it on or off, along with its four neighbours. Light them all in as few moves as possible. Meadows that are always solvable, from 3 to 12 moves, opening one after another, and three stars if you do as well as the game. Big fireflies that take off from their stem when they light up and flutter about, wings beating; the game fits the screen and goes full screen. Daily meadow with a day streak, and the solution explained with algebra (25 equations solved by elimination)."
+ "Casse-tête de lumières : dans un pré de 5 × 5 lucioles, toucher une luciole l'allume ou l'éteint, elle et ses quatre voisines. Allume-les toutes en le moins de coups possible. Des prés toujours faisables, de 3 à 12 coups, qui s'ouvrent l'un après l'autre, et trois étoiles si tu fais aussi bien que le jeu. Grandes lucioles qui décollent de leur tige quand elles s'allument et volettent en battant des ailes ; jeu à la taille de l'écran et plein écran. Pré du jour avec série de jours, et la solution expliquée par l’algèbre (25 équations résolues par élimination).": "A lights puzzle: in a meadow of 5 × 5 fireflies, touching a firefly turns it on or off, along with its four neighbours. Light them all in as few moves as possible. Meadows that are always solvable, from 3 to 12 moves, opening one after another, and three stars if you do as well as the game. Big fireflies that take off from their stem when they light up and flutter about, wings beating; the game fits the screen and goes full screen. Daily meadow with a day streak, and the solution explained with algebra (25 equations solved by elimination).",
+ "Première lueur": "First glow",
+ "Allumer toutes les lucioles d'un premier pré": "Light every firefly of your first meadow",
+ "Nuit d'été": "Summer night",
+ "Atteindre le pré 10": "Reach meadow 10",
+ "Pré scintillant": "Twinkling meadow",
+ "Atteindre le pré 25": "Reach meadow 25",
+ "Mille lumières": "A thousand lights",
+ "Atteindre le pré 50": "Reach meadow 50",
+ "Le moins de gestes": "Fewest moves",
+ "Gagner 100 étoiles": "Earn 100 stars",
+ "Une semaine de lucioles": "A week of fireflies",
+ "Finir le pré du jour 7 jours de suite": "Finish the meadow of the day 7 days in a row"
 }

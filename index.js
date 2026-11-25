@@ -303,6 +303,9 @@ export default async function (ctx) {
   const saveGames = () => { clearTimeout(gamesTimer); gamesTimer = setTimeout(() => { gamesTimer = null; folder.write('games', games).catch(() => {}); }, 500); };
   const best = (k, v) => { const b = games.best[k]; if (b == null || v > b) { games.best[k] = v; saveGames(); return true; } return false; };
   const gstore = (k, init) => (games[k] ??= init);
+  // les trophées de NeoDex (3.4.8 et plus) : succès et records déclarés dans plugin.json ; sur un NeoDex plus ancien, rien ne se passe
+  const trophy = id => { ctx.games?.unlock(id).catch(() => {}); };
+  const trophyRecord = (id, v) => { if (v != null && Number.isFinite(+v)) ctx.games?.record(id, +v).catch(() => {}); };
 function gameLoop(st, appKey, update, draw) {
   cancelAnimationFrame(st.raf);
   const STEP = 1000 / 60; let acc = 0, last = performance.now();
@@ -413,7 +416,8 @@ function luDraw() {
 const luCell = (x, y) => { const cx = Math.floor((x - LU.X) / LU.C), cy = Math.floor((y - LU.Y) / LU.C); return cx >= 0 && cy >= 0 && cx < LU.N && cy < LU.N ? [cx, cy] : null; };
 cv.onpointermove = e => { if (lu) lu.hover = luCell(...cpos(e)); };
 cv.onpointerdown = e => { e.preventDefault(); if (!lu) return; if (lu.mode === 'won') { if (lu.tick - lu.wonAt > 30) luNew(lu.daily ? lus.level : lus.level + 1); return; } const c = luCell(...cpos(e)); if (c) luPress(...c); };
-function luInfo() { const d = lus.daily; showStats([['Pré le plus loin', lus.top], ['Étoiles', lus.stars], ['Prés finis', lus.games], ['Pré du jour', d.last === luDay() ? 'fait ✓' : 'à faire'], ['Série de jours', (d.last === luDay() || d.last === luDay(1) ? d.streak : 0) + ' (record ' + d.best + ')']]); }
+function luInfo() {
+  setTimeout(luTrophies); const d = lus.daily; showStats([['Pré le plus loin', lus.top], ['Étoiles', lus.stars], ['Prés finis', lus.games], ['Pré du jour', d.last === luDay() ? 'fait ✓' : 'à faire'], ['Série de jours', (d.last === luDay() || d.last === luDay(1) ? d.streak : 0) + ' (record ' + d.best + ')']]); }
 $('luDaily').onclick = () => { luNew(lus.level, true); $('luDaily').blur(); };
 $('luMath').onclick = () => {
   $('luMath').blur(); if (!lu || lu.mode !== 'play') return; if (luShow) { luShow = null; $('luTip').textContent = ''; return; }
@@ -432,6 +436,13 @@ function luCheck() {  // vérification : chaque pré se résout en rejouant les 
   return [ok ? '' : 'prés', fit ? '' : 'taille', alg ? '' : 'algèbre'].filter(Boolean).join(' | ') || 'ok';
 }
 { const c = luCheck(); console.assert(c === 'ok', 'lucioles', c); cv.__lu = {show: () => (luShow || []).flatMap((v, i) => v ? [i] : []), check: luCheck, st: () => lu, press: (x, y) => luPress(x, y), again: lv => luNew(lv), lus}; }
+// les trophées, tirés des statistiques et des records gardés (aussi à l'ouverture : ce qui a été fait avant compte)
+function luTrophies() {
+  const sig = [lus.top, lus.stars, lus.games, lus.daily.best].join(); if (sig === luTrophies.sig) return; luTrophies.sig = sig;
+  trophyRecord('pre', lus.games ? lus.top : null); trophyRecord('etoiles', lus.stars || null);
+  if (lus.games >= 1) trophy('premier'); if (lus.top >= 10) trophy('n10'); if (lus.top >= 25) trophy('n25'); if (lus.top >= 50) trophy('n50');
+  if (lus.stars >= 100) trophy('etoiles'); if (lus.daily.best >= 7) trophy('jour7');
+}
 ctx.onOpen(() => { if (!lu) luNew(); gameLoop(lu, 'lucioles', () => {}, luDraw); luInfo(); });
 
 }

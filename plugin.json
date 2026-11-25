@@ -1,7 +1,7 @@
 {
   "id": "neodex.lucioles",
   "name": "Lucioles",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": "NDesumeur",
   "description": "Casse-tête de lumières : dans un pré de 5 × 5 lucioles, toucher une luciole l'allume ou l'éteint, elle et ses quatre voisines. Allume-les toutes en le moins de coups possible. Des prés toujours faisables, de 3 à 12 coups, qui s'ouvrent l'un après l'autre, et trois étoiles si tu fais aussi bien que le jeu. Grandes lucioles qui décollent de leur tige quand elles s'allument et volettent en battant des ailes ; jeu à la taille de l'écran et plein écran. Pré du jour avec série de jours, et la solution expliquée par l’algèbre (25 équations résolues par élimination).",
   "icon": "icon.png",
@@ -22,5 +22,52 @@
   "sdk": "2.1.0",
   "permissions": [
     "storage"
+  ],
+  "succes": [
+    {
+      "id": "premier",
+      "nom": "Première lueur",
+      "texte": "Allumer toutes les lucioles d'un premier pré"
+    },
+    {
+      "id": "n10",
+      "nom": "Nuit d'été",
+      "texte": "Atteindre le pré 10"
+    },
+    {
+      "id": "n25",
+      "nom": "Pré scintillant",
+      "texte": "Atteindre le pré 25"
+    },
+    {
+      "id": "n50",
+      "nom": "Mille lumières",
+      "texte": "Atteindre le pré 50",
+      "cache": true
+    },
+    {
+      "id": "etoiles",
+      "nom": "Le moins de gestes",
+      "texte": "Gagner 100 étoiles"
+    },
+    {
+      "id": "jour7",
+      "nom": "Une semaine de lucioles",
+      "texte": "Finir le pré du jour 7 jours de suite"
+    }
+  ],
+  "records": [
+    {
+      "id": "pre",
+      "nom": "Pré le plus loin",
+      "sens": "haut",
+      "format": "nombre"
+    },
+    {
+      "id": "etoiles",
+      "nom": "Étoiles",
+      "sens": "haut",
+      "format": "nombre"
+    }
   ]
 }
